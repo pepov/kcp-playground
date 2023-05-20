@@ -1,26 +1,19 @@
-kind: Deploy
-description: kcp.io deployment
-name: kcp
-type: kubernetes
-files:
-  - manifests/kcp.yaml
-include:
-  - manifests/kcp.yaml
-serviceResource:
-  kind: Deployment
-  name: kcp
-  containerName: kcp
-variables:
-  image: "${actions.build.kcpctl.outputs.deployment-image-id}"
-  version: "${actions.build.kcpctl.version}"
-build:
-  dependencies:
-    - kcpctl
----
 kind: Build
 name: kcpctl
 type: container
 spec:
   dockerfile: manifests/Dockerfile.kcpctl
 include:
-  - etc/**
+  - manifests/Dockerfile.kcpctl
+---
+kind: Deploy
+description: kcp.io
+name: kcp
+type: kubernetes
+spec:
+  files:
+  - manifests/kcp.yaml
+include:
+  - manifests/kcp.yaml
+dependencies:
+  - build.kcpctl
