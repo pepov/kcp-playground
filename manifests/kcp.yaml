@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kcp
+spec:
+  type: ClusterIP
+  selector:
+    app: kcp
+  ports:
+    - name: web
+      port: 6443
+      targetPort: web
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kcp
+  serviceName: kcp
+  template:
+    metadata:
+      labels:
+        app: kcp
+    spec:
+      containers:
+        - name: kcp
+          image: ghcr.io/kcp-dev/kcp:530d15f
+          args:
+            - start
+            - --root-directory=/data
+            - --external-hostname=kcp
+          ports:
+            - name: web
+              containerPort: 6443
+      securityContext:
+        fsGroup: 65532
