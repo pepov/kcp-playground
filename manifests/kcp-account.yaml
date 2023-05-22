@@ -25,7 +25,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: kcp-account-updater
-    namespace: ${environment.namespace}
+    namespace: ${variables.namespace}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

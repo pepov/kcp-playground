@@ -21,3 +21,5 @@ providers:
   - # The name of the provider plugin to use.
     name: local-kubernetes
     environments: [default]
+    namespace: ${environment.namespace}
+    defaultHostname: ${var.base-hostname}

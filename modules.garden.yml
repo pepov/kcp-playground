@@ -44,3 +44,5 @@ include:
 dependencies:
   - deploy.kcp-cert
   - build.kcpctl
+variables:
+  namespace: "${environment.namespace}"
