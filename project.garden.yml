@@ -12,6 +12,8 @@ name: kcp-playground
 environments:
   - # The name of the environment.
     name: default
+    variables:
+      base-hostname: kcp-playground.garden
 
 # A list of providers that should be used for this project, and their configuration. Please refer to individual
 # plugins/providers for details on how to configure them.

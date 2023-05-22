@@ -26,6 +26,20 @@ spec:
       labels:
         app: kcp
     spec:
+      initContainers:
+        - name: cert-bundle
+          image: "${actions.build.kcpctl.outputs.deployment-image-id}"
+          command:
+            - /bin/sh
+          args:
+            - -cxe
+            - |
+              cat /etc/kcp-certificate/tls.crt /etc/kcp-certificate/ca.crt > /data/tls-bundle.crt || true
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: kcp-certificate
+              mountPath: /etc/kcp-certificate
       containers:
         - name: kcp
           image: ghcr.io/kcp-dev/kcp:530d15f
@@ -33,8 +47,34 @@ spec:
             - start
             - --root-directory=/data
             - --external-hostname=kcp
+            - --tls-cert-file=/data/tls-bundle.crt
+            - --tls-private-key-file=/etc/kcp-certificate/tls.key
+            - --client-ca-file=/etc/kcp-certificate/ca.crt
           ports:
             - name: web
               containerPort: 6443
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: kcp-certificate
+              mountPath: /etc/kcp-certificate
       securityContext:
         fsGroup: 65532
+      volumes:
+        - name: kcp-certificate
+          secret:
+            secretName: kcp-server
+        - name: data
+          persistentVolumeClaim:
+            claimName: kcp-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kcp-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

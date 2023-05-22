@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kcp-account-updater
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kcp-account-updater
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - create
+      - patch
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kcp-account-updater
+subjects:
+  - kind: ServiceAccount
+    name: kcp-account-updater
+    namespace: ${environment.namespace}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kcp-account-updater
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: configure-kcp-${actions.build.kcpctl.version}
+spec:
+  ttlSecondsAfterFinished: 1200
+  template:
+    spec:
+      containers:
+        - name: configure
+          image: "${actions.build.kcpctl.outputs.deployment-image-id}"
+          command:
+            - /bin/sh
+          args:
+            - -cxe
+            - |
+              touch /tmp/kcp-admin.kubeconfig
+              export KUBECONFIG=/tmp/kcp-admin.kubeconfig
+              
+              kubectl config set-cluster kcp \
+                --server=https://kcp:6443/clusters/root \
+                --tls-server-name=kcp.${var.base-hostname} \
+                --certificate-authority=/etc/kcp-server-certificate/ca.crt \
+                --embed-certs=true
+              
+              kubectl config set-credentials kcp-admin \
+                --client-certificate /etc/kcp-admin-certificate/tls.crt \
+                --client-key /etc/kcp-admin-certificate/tls.key \
+                --embed-certs=true
+              
+              kubectl config set-context kcp --user kcp-admin --cluster kcp --namespace=default
+              kubectl config use-context kcp
+              
+              i=1
+              until kubectl ws tree; do
+                sleep $i
+                [ $i -lt 20 ] || exit 1  # restart this container
+                i=$(expr $i + 1)
+              done
+              kubectl ws root
+              kubectl ws create demo --type root:organization --enter --ignore-existing
+              
+              kubectl config view --raw --minify > /tmp/kcp-admin.kubeconfig-minified
+              
+              unset KUBECONFIG
+              kubectl create secret generic kcp-account --from-file=config=/tmp/kcp-admin.kubeconfig-minified --dry-run=client -o yaml | kubectl apply -f-
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: kcp-server-certificate
+              mountPath: /etc/kcp-server-certificate
+            - name: kcp-admin-certificate
+              mountPath: /etc/kcp-admin-certificate
+      restartPolicy: OnFailure
+      serviceAccountName: kcp-account-updater
+      volumes:
+        - name: kcp-server-certificate
+          secret:
+            secretName: kcp-server
+        - name: kcp-admin-certificate
+          secret:
+            secretName: kcp-admin
+        - name: data
+          persistentVolumeClaim:
+            claimName: kcp-data
+            readOnly: true
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - kcp
+              topologyKey: kubernetes.io/hostname

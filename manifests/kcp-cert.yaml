@@ -1,0 +1,65 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: kcp
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kcp-ca
+spec:
+  isCA: true
+  commonName: kcp-ca
+  secretName: kcp-ca
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: kcp
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: kcp-ca
+spec:
+  ca:
+    secretName: kcp-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kcp-server
+spec:
+  dnsNames:
+    - kcp.${var.base-hostname}
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: kcp-ca
+  secretName: kcp-server
+  usages:
+    - digital signature
+    - key encipherment
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kcp-admin
+spec:
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: kcp-ca
+  secretName: kcp-admin
+  commonName: kcp-admin
+  subject:
+    organizations:
+      - system:kcp:admin
+  usages:
+    - digital signature
+    - key encipherment
+    - client auth

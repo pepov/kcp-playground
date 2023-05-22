@@ -1,0 +1,46 @@
+kind: Deploy
+type: helm
+name: cert-manager
+spec:
+  chart:
+    name: cert-manager
+    repo: https://charts.jetstack.io
+    version: "v1.11.2"
+  values:
+    installCRDs: true
+timeout: 240
+---
+kind: Build
+name: kcpctl
+type: container
+spec:
+  dockerfile: manifests/Dockerfile.kcpctl
+include:
+  - manifests/Dockerfile.kcpctl
+---
+kind: Deploy
+description: Certificates for kcp
+name: kcp-cert
+type: kubernetes
+spec:
+  files:
+    - manifests/kcp-cert.yaml
+include:
+  - manifests/kcp-cert.yaml
+dependencies:
+  - deploy.cert-manager
+---
+kind: Deploy
+description: kcp.io
+name: kcp
+type: kubernetes
+spec:
+  files:
+  - manifests/kcp.yaml
+  - manifests/kcp-account.yaml
+include:
+  - manifests/kcp.yaml
+  - manifests/kcp-account.yaml
+dependencies:
+  - deploy.kcp-cert
+  - build.kcpctl

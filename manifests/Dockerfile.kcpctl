@@ -1,7 +1,7 @@
 FROM alpine:latest
 ARG KCP_VERSION=0.11.0
 WORKDIR /root
-RUN apk update && apk add curl
+RUN apk update && apk add curl && true
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && rm kubectl
 RUN curl -L https://github.com/kcp-dev/kcp/releases/download/v${KCP_VERSION}/kubectl-kcp-plugin_${KCP_VERSION}_linux_$(uname -m|sed -e s/x86_/amd/ -e s/aarch64/arm64/).tar.gz  | tar xz -C /usr/local/ && chmod 0755 /usr/local/bin/kubectl-*
 CMD [kubectl]
