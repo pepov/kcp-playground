@@ -24,3 +24,4 @@ providers:
     namespace: ${environment.namespace}
     defaultHostname: ${var.base-hostname}
     ingressClass: nginx
+    setupIngressController: false
