@@ -15,8 +15,8 @@ spec:
             - -cxe
             - |
               export KUBECONFIG=/etc/kcp-account/config
-              kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.crds.yaml
               kubectl create ns cert-manager
+              kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.crds.yaml
           volumeMounts:
             - name: kcp-account
               mountPath: /etc/kcp-account
