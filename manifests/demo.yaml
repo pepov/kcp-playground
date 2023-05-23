@@ -1,0 +1,22 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: demo
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: self-signed-server
+spec:
+  dnsNames:
+    - i-am-server
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: demo
+  secretName: self-signed-server
+  usages:
+    - digital signature
+    - key encipherment
