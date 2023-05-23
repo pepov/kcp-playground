@@ -67,6 +67,23 @@ dependencies:
   - deploy.kcp-cert
   - build.kcpctl
 ---
+kind: Run
+description: Wait for kcp to start
+name: kcp-wait
+type: exec
+spec:
+  command:
+    - kubectl
+    - rollout
+    - status
+    - --watch
+    - --timeout=120s
+    - -n
+    - "${environment.namespace}"
+    - statefulset/kcp
+dependencies:
+  - deploy.kcp
+---
 kind: Deploy
 description: Create kcp credentials
 name: kcp-account
@@ -77,11 +94,27 @@ spec:
 include:
   - manifests/kcp-account.yaml
 dependencies:
-  - deploy.kcp
+  - run.kcp-wait
   - deploy.kcp-cert
   - build.kcpctl
 variables:
   namespace: "${environment.namespace}"
+---
+kind: Run
+description: Wait for kcp-account to be completed
+name: kcp-account-wait
+type: exec
+spec:
+  command:
+    - kubectl
+    - wait
+    - --for=condition=complete
+    - --timeout=60s
+    - -n
+    - "${environment.namespace}"
+    - job/kcp-account
+dependencies:
+  - deploy.kcp-account
 ---
 kind: Deploy
 description: CertManager CRDs for KCP
@@ -94,7 +127,7 @@ include:
   - manifests/kcp-cert-manager-crds.yaml
 dependencies:
   - build.kcpctl
-  - deploy.kcp-account
+  - run.kcp-account-wait
 ---
 kind: Deploy
 description: CertManager running in kubernetes but working against kcp
