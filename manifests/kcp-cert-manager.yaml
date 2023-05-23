@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kcp-cert-manager
+spec:
+  selector:
+    matchLabels:
+      app: kcp-cert-manager
+  serviceName: kcp-cert-manager
+  template:
+    metadata:
+      labels:
+        app: kcp-cert-manager
+    spec:
+      containers:
+        - name: cert-manager-controller
+          image: quay.io/jetstack/cert-manager-controller:v1.11.2
+          args:
+            - --kubeconfig
+            - /etc/kcp-account/config
+            - --cluster-resource-namespace
+            - cert-manager
+            - --leader-election-namespace
+            - cert-manager
+            - --controllers
+            - issuers,clusterissuers,certificates-metrics,certificaterequests-approver,certificaterequests-issuer-ca,certificaterequests-issuer-selfsigned,certificates-trigger,certificates-issuing,certificates-key-manager,certificates-request-manager,certificates-readiness,certificates-revision-manager
+          volumeMounts:
+            - name: kcp-account
+              mountPath: /etc/kcp-account
+      securityContext:
+        fsGroup: 65532
+      volumes:
+        - name: kcp-account
+          secret:
+            secretName: kcp-account

@@ -84,14 +84,26 @@ variables:
   namespace: "${environment.namespace}"
 ---
 kind: Deploy
-description: CertManager running against a kcp workspace
-name: kcp-certmanager
+description: CertManager CRDs for KCP
+name: kcp-cert-manager-crds
 type: kubernetes
 spec:
   files:
-    - manifests/kcp-certmanager.yaml
+    - manifests/kcp-cert-manager-crds.yaml
 include:
-  - manifests/kcp-certmanager.yaml
+  - manifests/kcp-cert-manager-crds.yaml
 dependencies:
   - build.kcpctl
   - deploy.kcp-account
+---
+kind: Deploy
+description: CertManager running in kubernetes but working against kcp
+name: kcp-cert-manager
+type: kubernetes
+spec:
+  files:
+    - manifests/kcp-cert-manager.yaml
+include:
+  - manifests/kcp-cert-manager.yaml
+dependencies:
+  - deploy.kcp-cert-manager-crds
