@@ -31,18 +31,43 @@ dependencies:
   - deploy.cert-manager
 ---
 kind: Deploy
-description: kcp.io
+description: Install kcp
 name: kcp
 type: kubernetes
 spec:
   files:
   - manifests/kcp.yaml
-  - manifests/kcp-account.yaml
 include:
   - manifests/kcp.yaml
+dependencies:
+  - deploy.kcp-cert
+  - build.kcpctl
+---
+kind: Deploy
+description: Create kcp credentials
+name: kcp-account
+type: kubernetes
+spec:
+  files:
+    - manifests/kcp-account.yaml
+include:
   - manifests/kcp-account.yaml
 dependencies:
+  - deploy.kcp
   - deploy.kcp-cert
   - build.kcpctl
 variables:
   namespace: "${environment.namespace}"
+---
+kind: Deploy
+description: CertManager running against a kcp workspace
+name: kcp-certmanager
+type: kubernetes
+spec:
+  files:
+    - manifests/kcp-certmanager.yaml
+include:
+  - manifests/kcp-certmanager.yaml
+dependencies:
+  - build.kcpctl
+  - deploy.kcp-account

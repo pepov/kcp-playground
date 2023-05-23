@@ -34,7 +34,7 @@ roleRef:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: configure-kcp-${actions.build.kcpctl.version}
+  name: kcp-account
 spec:
   ttlSecondsAfterFinished: 1200
   template:
@@ -78,8 +78,6 @@ spec:
               unset KUBECONFIG
               kubectl create secret generic kcp-account --from-file=config=/tmp/kcp-admin.kubeconfig-minified --dry-run=client -o yaml | kubectl apply -f-
           volumeMounts:
-            - name: data
-              mountPath: /data
             - name: kcp-server-certificate
               mountPath: /etc/kcp-server-certificate
             - name: kcp-admin-certificate
@@ -93,10 +91,6 @@ spec:
         - name: kcp-admin-certificate
           secret:
             secretName: kcp-admin
-        - name: data
-          persistentVolumeClaim:
-            claimName: kcp-data
-            readOnly: true
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

@@ -16,7 +16,6 @@ kind: StatefulSet
 metadata:
   name: kcp
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: kcp
@@ -78,3 +77,23 @@ spec:
   resources:
     requests:
       storage: 1Gi
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kcp
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: "kcp.${var.base-hostname}"
+      http:
+        paths:
+          - backend:
+              service:
+                name: kcp
+                port:
+                  number: 6443
+            path: /
+            pathType: Prefix

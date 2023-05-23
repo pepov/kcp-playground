@@ -1,6 +1,7 @@
 .PHONY: kcp-local-config
 kcp-local-config:     ## Acquire local KCP kubeconfig and save it locally
 	kubectl get secrets -n default kcp-account -o jsonpath={.data.config} | base64 -d > .kcp/admin-stable.kubeconfig
+	kubectl config set-cluster workspace.kcp.io/current --server=https://kcp.playground.garden/clusters/root:demo --kubeconfig .kcp/admin-stable.kubeconfig
 	@echo "Local kcp config is saved under .kcp/admin-stable.kubeconfig"
 	@echo "You can start using it with"
 	@echo "    export KUBECONFIG=$(PWD)/.kcp/admin-stable.kubeconfig"

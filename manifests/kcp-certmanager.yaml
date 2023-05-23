@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kcp-certmanager-crds
+spec:
+  ttlSecondsAfterFinished: 1200
+  template:
+    spec:
+      containers:
+        - name: configure
+          image: "${actions.build.kcpctl.outputs.deployment-image-id}"
+          command:
+            - /bin/sh
+          args:
+            - -cxe
+            - |
+              export KUBECONFIG=/etc/kcp-account/config
+              kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.11.0/cert-manager.crds.yaml
+          volumeMounts:
+            - name: kcp-account
+              mountPath: /etc/kcp-account
+      restartPolicy: OnFailure
+      volumes:
+        - name: kcp-account
+          secret:
+            secretName: kcp-account
