@@ -1,4 +1,6 @@
 ```
+# you will need to install asdf first: https://asdf-vm.com/
+
 asdf plugin add minikube https://github.com/alvarobp/asdf-minikube.git
 asdf plugin add garden https://github.com/pepov/asdf-garden.git
 
@@ -19,7 +21,7 @@ export KUBECONFIG=$PWD/.kcp/admin-stable.kubeconfig
 # we can for example check server version
 kubectl version
 
-# this supposed to fail miserably
+# this supposed to fail miserably, since we are talking to a kcp workspace which doesn't have pods
 kubectl get pod
 
 # see what resources are actually available in a kcp API server
@@ -28,7 +30,7 @@ kubectl api-resources
 # bonus: you can check kcp workspaces as well using the kcp kubectl plugin
 asdf plugin add kcp https://github.com/pepov/asdf-kcp.git
 asdf install kcp latest
-asdf global kcp latest
+asdf local kcp latest
 
 kubectl ws tree
 
@@ -41,4 +43,6 @@ garden deploy kcp-cert-manager
 # switch back to kcp and try to create some certificates inside kcp using cert-manager running outside (in minikube)
 export KUBECONFIG=$PWD/.kcp/admin-stable.kubeconfig
 kubectl apply -f manifests/demo.yaml
+
+# we should see that the certificate has been successfully created
 ```
